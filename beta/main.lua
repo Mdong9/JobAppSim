@@ -57,6 +57,11 @@ local dtotal = 0
 
 local main_game_screen = true
 local upgrade_tree_screen = false
+
+local exitX1
+local exitX2
+local exitY1
+local exitY2
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Buttons Initialization------------------------------
 ----------------------------------------------------------------------------------------
@@ -399,19 +404,6 @@ function drawUpgradeButtons()
     for _, button in ipairs(upgrade_info) do
         love.graphics.setColor(button.color)
         -- draws upgrade box
-        -- love.graphics.rectangle(
-        --     "fill",
-        --     windowWidth*0.9 - (upgradeBoxWidth/2),
-        --     windowHeight*0.1 + offset_y,
-        --     upgradeBoxWidth,
-        --     upgradeBoxHeight
-        -- )
-
-        -- --update box coords
-        -- button.x1 = windowWidth*0.9 - (upgradeBoxWidth/2)
-        -- button.x2 = windowWidth*0.9 + (upgradeBoxWidth/2)
-        -- button.y1 = windowHeight*0.1 + offset_y
-        -- button.y2 = windowHeight*0.1 + offset_y + upgradeBoxHeight
         love.graphics.rectangle(
             "fill",
             bgX + bgWidth*0.2,
@@ -441,7 +433,7 @@ function drawUpgradeButtons()
         love.graphics.print(button.boughtQuantity .. "/" .. button.maxQuantity, windowWidth*0.9 + (upgradeBoxWidth/2) - textWidth, windowHeight*0.1 + offset_y + upgradeBoxHeight*0.70)
 
         offset_y = upgradeBoxHeight + margin + offset_y
-        
+
         love.graphics.setColor(1,1,1)
     end
 end
@@ -455,7 +447,28 @@ function drawUpgradeMenuTabs()
     upgradeTabWidth = 25
     love.graphics.rectangle("fill", windowWidth*0.82, windowHeight*0.06 - upgradeTabHeight, upgradeTabWidth, upgradeTabHeight)
 end
-
+----------------------------------------------------------------------------------------
+----------------------------Exit Game Logic---------------------------------------------
+----------------------------------------------------------------------------------------
+function drawExit()
+    --test exit box
+    love.graphics.rectangle(
+        "fill",
+        bgX + bgWidth*0.2,
+        windowHeight - 75,
+        bgWidth*0.6,
+        upgradeBoxHeight
+    )
+    exitX1 = bgX + bgWidth*0.2
+    exitX2 = bgX + bgWidth*0.2 + bgWidth*0.6
+    exitY1 = windowHeight - 75
+    exitY2 = windowHeight - 75 + upgradeBoxHeight
+end
+function exitCheck(mouseX, mouseY)
+    if mouseX >= exitX1 and mouseX <= exitX2 and mouseY >= exitY1 and mouseY <= exitY2 then
+        love.event.quit(0)
+    end
+end
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Buttons Click Check---------------------------------
 ----------------------------------------------------------------------------------------
@@ -465,7 +478,7 @@ function clickUpgradeCheck(mouseX, mouseY)
     for _, button in ipairs(upgrade_info) do
 
         -- print(button.name .. " x1: " .. button.x1 .. " y1: " .. button.y1 .. " x2: " .. button.x2 .. " y2: " .. button.y2)
-        if mouseX > button.x1 and mouseX < button.x2 and mouseY > button.y1 and mouseY < button.y2 then
+        if mouseX >= button.x1 and mouseX <= button.x2 and mouseY >= button.y1 and mouseY <= button.y2 then
             
             if button.boughtQuantity < button.maxQuantity and total_money >= button.price then
                 -- print("buying upgrade")
@@ -566,6 +579,7 @@ end
 
 function love.draw()
     drawUpgradeMenu()
+    drawExit()
 
     -- Counter for total_money
     love.graphics.setColor(0,0,0)
@@ -597,19 +611,20 @@ function love.resize(w, h)
     bgWidth = windowWidth - bgX
 end
 
-function love.mousepressed( x, y, button, istouch, presses )
+function love.mousepressed( x, y, _, _, _)
     print("click" .. x .. y)
+
+    clickUpgradeCheck(x,y)
+    clickTreeTabCheck(x,y)
+    exitCheck(x,y)
     if main_game_screen then
-        clickUpgradeCheck(x,y)
         clickJobCheck(x,y)
-        clickTreeTabCheck(x,y)
     elseif upgrade_tree_screen then
-        clickTreeTabCheck(x,y)
-        clickUpgradeCheck(x,y)
+
     end
 end
 
-function love.wheelmoved(x, y)
+function love.wheelmoved(_, y)
     
     if upgrade_tree_screen then
         scrollBarOffset = scrollBarOffset - y*30
