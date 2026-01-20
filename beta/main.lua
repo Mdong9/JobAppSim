@@ -60,6 +60,8 @@ local exitY1
 local exitY2
 
 local scroll = 0
+
+local exit = require("exit")
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Buttons Initialization------------------------------
 ----------------------------------------------------------------------------------------
@@ -445,28 +447,7 @@ function drawUpgradeMenuTabs()
     upgradeTabWidth = 25
     love.graphics.rectangle("fill", windowWidth*0.82, windowHeight*0.06 - upgradeTabHeight, upgradeTabWidth, upgradeTabHeight)
 end
-----------------------------------------------------------------------------------------
-----------------------------Exit Game Logic---------------------------------------------
-----------------------------------------------------------------------------------------
-function drawExit()
-    --test exit box
-    love.graphics.rectangle(
-        "fill",
-        bgX + bgWidth*0.2,
-        windowHeight - 75,
-        bgWidth*0.6,
-        upgradeBoxHeight
-    )
-    exitX1 = bgX + bgWidth*0.2
-    exitX2 = bgX + bgWidth*0.2 + bgWidth*0.6
-    exitY1 = windowHeight - 75
-    exitY2 = windowHeight - 75 + upgradeBoxHeight
-end
-function exitCheck(mouseX, mouseY)
-    if mouseX >= exitX1 and mouseX <= exitX2 and mouseY >= exitY1 and mouseY <= exitY2 then
-        love.event.quit(0)
-    end
-end
+
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Buttons Click Check---------------------------------
 ----------------------------------------------------------------------------------------
@@ -539,7 +520,7 @@ end
 ----------------------------------------------------------------------------------------
 function love.load()
     initializeUpgradeValues()    --initializes upgrade option for game
-
+    
     love.window.setMode(1280, 720, {
         fullscreen = false,
         resizable = true,
@@ -577,7 +558,12 @@ end
 
 function love.draw()
     drawUpgradeMenu()
-    drawExit()
+
+    exit.drawExit(bgX, bgWidth, windowHeight, upgradeBoxHeight)
+    exitX1 = exit.coords.exitX1
+    exitY1 = exit.coords.exitY1
+    exitX2 = exit.coords.exitX2
+    exitY2 = exit.coords.exitY2
 
     -- Counter for total_money
     love.graphics.setColor(0,0,0)
@@ -612,7 +598,8 @@ end
 function love.mousepressed( x, y, _, _, _)
     clickUpgradeCheck(x,y)
     clickTreeTabCheck(x,y)
-    exitCheck(x,y)
+
+    exit.exitCheck(x, y, exitX1, exitY1, exitX2, exitY2)
 
     if main_game_screen then
         clickJobCheck(x,y)
