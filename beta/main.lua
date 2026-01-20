@@ -48,10 +48,6 @@
 --CLEAN CODE UP
 local font = love.graphics.getFont()
 
-local DESIGN_WIDTH  = 800
-local DESIGN_HEIGHT = 600
-local ASPECT_RATIO = DESIGN_WIDTH / DESIGN_HEIGHT
-
 local total_money = 0
 local dtotal = 0
 
@@ -62,6 +58,8 @@ local exitX1
 local exitX2
 local exitY1
 local exitY2
+
+local scroll = 0
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Buttons Initialization------------------------------
 ----------------------------------------------------------------------------------------
@@ -612,11 +610,10 @@ function love.resize(w, h)
 end
 
 function love.mousepressed( x, y, _, _, _)
-    print("click" .. x .. y)
-
     clickUpgradeCheck(x,y)
     clickTreeTabCheck(x,y)
     exitCheck(x,y)
+
     if main_game_screen then
         clickJobCheck(x,y)
     elseif upgrade_tree_screen then
@@ -641,7 +638,9 @@ function love.wheelmoved(_, y)
 end
 
 --Things to fix or implement next
---blurry text depending on resize (resolution or scale?)
 --scroll and spacer for upgrades
 --resizeing aspect ratio preserved (Hard)
 --reformat job application and upgrade shop
+--add exit graphic
+--add job application png
+--separate functions out
