@@ -2,8 +2,7 @@ local upgrades = {}
 
 local upgradeBox
 
-local upgradeTabWidth
-local upgradeTabHeight
+
 
 local font = love.graphics.getFont()
 ----------------------------------------------------------------------------------------
@@ -108,16 +107,28 @@ function drawUpgradeButtons(bgX, bgWidth, windowWidth, windowHeight, upgradeBoxH
 end
 
 function drawUpgradeMenuTabs(windowWidth, windowHeight)
+    local upgradeTabWidth
+    local upgradeTabHeight
+    local tabX1
+    local tabY1
+
     --divider for tabs from upgrades
     love.graphics.line(windowWidth*0.8, windowHeight*0.06, windowWidth, windowHeight*0.06)
 
     --upgrade tree tab
     upgradeTabHeight = 20
     upgradeTabWidth = 25
-    love.graphics.rectangle("fill", windowWidth*0.82, windowHeight*0.06 - upgradeTabHeight, upgradeTabWidth, upgradeTabHeight)
+    tabX1 = windowWidth*0.82
+    tabY1 = windowHeight*0.06 - upgradeTabHeight
+
+    love.graphics.rectangle("fill", tabX1, tabY1, upgradeTabWidth, upgradeTabHeight)
 
     upgrades.TabHeight = upgradeTabHeight
     upgrades.TabWidth = upgradeTabWidth
+    upgrades.TabX1 = tabX1
+    upgrades.TabY1 = tabY1
+    upgrades.TabX2 = tabX1 + upgradeTabWidth
+    upgrades.TabY2 = tabY1 + upgradeTabHeight
 end
 
 ----------------------------------------------------------------------------------------

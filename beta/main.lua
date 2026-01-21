@@ -64,8 +64,14 @@ local scroll = 0
 local exit = require("exit")
 local upgrades = require("upgradeMenu")
 local upgradeTree = require("upgradeTree")
+local clickCheck = require("clickChecker")
 
 local upgrade_info
+
+local jobX1
+local jobY1
+local jobX2
+local jobY2
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Buttons Initialization------------------------------
 ----------------------------------------------------------------------------------------
@@ -80,10 +86,10 @@ local bgWidth
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Tree Initial Values---------------------------------
 ----------------------------------------------------------------------------------------
-local trimmedWindowWidth = windowWidth * 0.8
+local trimmedWindowWidth
 
 local scrollBarOffset = 0
-local scrollBarX = trimmedWindowWidth - 20
+local scrollBarX
 local scrollBarHeight = 150
 local scrollBarWidth = 20
 local scrollBarOffsetMin = 0
@@ -126,58 +132,6 @@ function drawUpgradeTreeScrollBar()
     love.graphics.rectangle("fill", scrollBarX, windowHeight*0.06 + scrollBarOffset, scrollBarWidth, scrollBarHeight)
     love.graphics.setColor(1,1,1)
 end
-
-----------------------------------------------------------------------------------------
-----------------------------Upgrade Buttons Click Check---------------------------------
-----------------------------------------------------------------------------------------
-function clickUpgradeCheck(mouseX, mouseY)
-    -- local mouseX, mouseY = love.mouse.getPosition( )
-    -- print("Upgrade " .. "x: " .. mouseX .. " y: " .. mouseY)
-    for _, button in ipairs(upgrade_info) do
-
-        -- print(button.name .. " x1: " .. button.x1 .. " y1: " .. button.y1 .. " x2: " .. button.x2 .. " y2: " .. button.y2)
-        if mouseX >= button.x1 and mouseX <= button.x2 and mouseY >= button.y1 and mouseY <= button.y2 then
-            
-            if button.boughtQuantity < button.maxQuantity and total_money >= button.price then
-                -- print("buying upgrade")
-                total_money = total_money - button.price
-
-                button.boughtQuantity = button.boughtQuantity + 1 --update value bought
-                button.price = (button.base_price * (1.20 ^ button.boughtQuantity)) + button.price
-                --update upgrade related values later
-                --change color of box when pressed then change it back
-            end
-            break
-        end
-    end
-end
-----------------------------------------------------------------------------------------
-----------------------------Main clicker Click Check------------------------------------
-----------------------------------------------------------------------------------------
-function clickJobCheck(mouseX, mouseY)
-    x1 = (windowWidth*0.8)/2 - rectangle_width/2
-    y1 = windowHeight/2 - rectangle_height/2
-    x2 = (windowWidth*0.8)/2 + rectangle_width/2
-    y2 = windowHeight/2 + rectangle_height/2
-
-    if mouseX > x1 and mouseX < x2 and mouseY > y1 and mouseY < y2 then
-        total_money = total_money + 1
-    end
-end
-----------------------------------------------------------------------------------------
---------------------------------Upgrade Tree Click Check--------------------------------
-----------------------------------------------------------------------------------------
-function clickTreeTabCheck(mouseX, mouseY)
-    x1 = windowWidth*0.82
-    y1 = windowHeight*0.06 - upgrades.TabHeight
-    x2 = windowWidth*0.82 + upgrades.TabWidth
-    y2 = windowHeight*0.06
-
-    if mouseX > x1 and mouseX < x2 and mouseY > y1 and mouseY < y2 then
-        main_game_screen = not main_game_screen
-        upgrade_tree_screen = not upgrade_tree_screen
-    end
-end
 ----------------------------------------------------------------------------------------
 --------------------------------Main Clicker visual-------------------------------------
 ----------------------------------------------------------------------------------------
@@ -201,6 +155,8 @@ function love.load()
         }
     ) --should work
     
+    trimmedWindowWidth = windowWidth*0.8
+    scrollBarX = trimmedWindowWidth - 20
     bgX = windowWidth*0.8
     bgWidth = windowWidth - bgX
 
@@ -253,6 +209,12 @@ function love.draw()
         upgradeTree.renderTree(trimmedWindowWidth)
         drawUpgradeTreeScrollBar()
     end
+
+    --fix variable reference 
+    jobX1 = (windowWidth*0.8)/2 - rectangle_width/2
+    jobY1 = windowHeight/2 - rectangle_height/2
+    jobX2 = (windowWidth*0.8)/2 + rectangle_width/2
+    jobY2 = windowHeight/2 + rectangle_height/2
 end
 
 function love.resize(w, h)
@@ -268,16 +230,23 @@ function love.resize(w, h)
 end
 
 function love.mousepressed( x, y, _, _, _)
-    clickUpgradeCheck(x,y)
-    clickTreeTabCheck(x,y)
 
+    clickCheck.clickUpgradeCheck(x, y, upgrade_info, total_money)
+    clickCheck.clickTreeTabCheck(x, y, upgrades.TabX1, upgrades.TabY1, upgrades.TabX2, upgrades.TabY2, main_game_screen, upgrade_tree_screen)
     exit.exitCheck(x, y, exitX1, exitY1, exitX2, exitY2)
 
+    
+    main_game_screen = clickCheck.main_game_screen
+    upgrade_tree_screen = clickCheck.upgrade_tree_screen
+
+
     if main_game_screen then
-        clickJobCheck(x,y)
+        clickCheck.clickJobCheck(x,y, jobX1, jobY1, jobX2, jobY2, total_money)
     elseif upgrade_tree_screen then
 
     end
+
+    total_money = clickCheck.total_money
 end
 
 function love.wheelmoved(_, y)
