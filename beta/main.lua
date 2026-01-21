@@ -171,6 +171,7 @@ function love.load()
     -- love.mouse.setCursor(penCursor)
 end
 
+
 function love.update(dt)
     dtotal = dtotal + dt
 
@@ -183,6 +184,7 @@ function love.update(dt)
         end
     end
 end
+
 
 function love.draw()
     upgrades.drawUpgradeMenu(bgX, bgWidth, windowWidth, windowHeight, upgradeBoxHeight, upgradeBoxWidth)
@@ -217,6 +219,7 @@ function love.draw()
     jobY2 = windowHeight/2 + rectangle_height/2
 end
 
+
 function love.resize(w, h)
     windowHeight = h
     windowWidth = w
@@ -229,24 +232,24 @@ function love.resize(w, h)
     bgWidth = windowWidth - bgX
 end
 
-function love.mousepressed( x, y, _, _, _)
 
-    clickCheck.clickUpgradeCheck(x, y, upgrade_info, total_money)
+function love.mousepressed( x, y, _, _, _)
+    total_money = clickCheck.clickUpgradeCheck(x, y, upgrade_info, total_money)
     clickCheck.clickTreeTabCheck(x, y, upgrades.TabX1, upgrades.TabY1, upgrades.TabX2, upgrades.TabY2, main_game_screen, upgrade_tree_screen)
     exit.exitCheck(x, y, exitX1, exitY1, exitX2, exitY2)
 
+    
     
     main_game_screen = clickCheck.main_game_screen
     upgrade_tree_screen = clickCheck.upgrade_tree_screen
 
 
     if main_game_screen then
-        clickCheck.clickJobCheck(x,y, jobX1, jobY1, jobX2, jobY2, total_money)
+        total_money = clickCheck.clickJobCheck(x,y, jobX1, jobY1, jobX2, jobY2, total_money)
     elseif upgrade_tree_screen then
 
     end
-
-    total_money = clickCheck.total_money
+    
 end
 
 function love.wheelmoved(_, y)
