@@ -195,6 +195,14 @@ function love.draw()
     exitX2 = exit.coords.exitX2
     exitY2 = exit.coords.exitY2
 
+    if main_game_screen then
+        drawJobApplication()
+    elseif upgrade_tree_screen then
+        upgradeTree.renderTree(trimmedWindowWidth)
+        upgradeTree.drawBackground(trimmedWindowWidth, scrollBarOffset)
+        drawUpgradeTreeScrollBar()
+    end
+
     -- Counter for total_money
     love.graphics.setColor(0,0,0)
     local moneyTextHeight = font:getHeight()
@@ -205,12 +213,7 @@ function love.draw()
     love.graphics.print("Job Applications: " .. total_money, moneyX, moneyY)
     love.graphics.setColor(1,1,1)
     
-    if main_game_screen then
-        drawJobApplication()
-    elseif upgrade_tree_screen then
-        upgradeTree.renderTree(trimmedWindowWidth)
-        drawUpgradeTreeScrollBar()
-    end
+
 
     --fix variable reference 
     jobX1 = (windowWidth*0.8)/2 - rectangle_width/2
@@ -265,6 +268,7 @@ function love.wheelmoved(_, y)
                 scrollBarOffset = scrollBarOffsetMax
             end
         end
+        upgradeTree.drawBackground(trimmedWindowWidth, scrollBarOffset)
     end
 end
 

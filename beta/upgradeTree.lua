@@ -1,3 +1,4 @@
+--height of one upgrade section = 3*box height + 4*buffer + 2*largebuffer
 ----------------------------------------------------------------------------------------
 --------------------Tree Upgrade Tiers Visualization functions--------------------------
 ----------------------------------------------------------------------------------------
@@ -5,8 +6,11 @@
 local upgradeTree = {}
 
 
-local tree_upgrade_node_height = 30
-local tree_upgrade_node_width = 60
+-- local tree_upgrade_node_height = 30
+-- local tree_upgrade_node_width = 60
+
+local tree_upgrade_node_height = 50
+local tree_upgrade_node_width = 150
 
 local buffer = 20
 local tree_margin = 5
@@ -208,12 +212,37 @@ function renderTierFinal(trimmedWindowWidth, windowHeight)
     love.graphics.setColor(1,1,1)
 end
 
+function drawTreeBackground(trimmedWindowWidth, scrollOffset)
+    local flipflop = true
+    local largeBuffer = 35
+    local smallBuffer = 25
+    local offsetBack = 0
+    local treeBGY = 0
+    local treeBGHeight = 2*largeBuffer + 4*smallBuffer + 3*tree_upgrade_node_height
+    for _ = 1, 8 do
+        if flipflop then
+            -- love.graphics.print("hi",0, treeBGY + offsetBack)
+            love.graphics.setColor(0.4,0.5,0.5)
+            love.graphics.rectangle("fill", 0, treeBGY + offsetBack - scrollOffset, trimmedWindowWidth, treeBGHeight)
+            love.graphics.setColor(1,1,1)
+        end
+        flipflop = not flipflop
+        offsetBack = offsetBack + treeBGHeight
+    end
+end
+
+
 function upgradeTree.renderTree(trimmedWindowWidth)
-    renderTier1(trimmedWindowWidth)
-    renderTier2(trimmedWindowWidth)
-    renderTier3(trimmedWindowWidth)
-    renderTier4(trimmedWindowWidth)
+    -- renderTier1(trimmedWindowWidth)
+    -- renderTier2(trimmedWindowWidth)
+    -- renderTier3(trimmedWindowWidth)
+    -- renderTier4(trimmedWindowWidth)
     -- renderTierFinal()
 end
+
+function upgradeTree.drawBackground(trimmedWindowWidth, scrollOffset)
+    drawTreeBackground(trimmedWindowWidth, scrollOffset)
+end
+
 
 return upgradeTree
