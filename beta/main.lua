@@ -48,7 +48,7 @@
 --CLEAN CODE UP
 local font = love.graphics.getFont()
 
-local total_money = 0
+local total_money = 100000
 local dtotal = 0
 
 local main_game_screen = true
@@ -72,6 +72,10 @@ local jobX1
 local jobY1
 local jobX2
 local jobY2
+
+local tabOffset
+
+local firstClick = true--used for making sure that tree upgrade click check doesnt check upgrades on click on for the tab
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Buttons Initialization------------------------------
 ----------------------------------------------------------------------------------------
@@ -95,37 +99,21 @@ local scrollBarWidth = 20
 local scrollBarOffsetMin = 0
 local scrollBarOffsetMax = windowHeight - scrollBarHeight - windowHeight*0.06
 
-function checkDependency(curr_upgrade)
-    for _, tier in ipairs(tree_upgrade_tiers) do
-        for _, upgrade in ipairs(tier) do
-            if upgrade.name == curr_upgrade.dependency and upgrade.unlockStatus == true then
-                curr_upgrade.unlockStatus = true
-                return curr_upgrade.unlockStatus
-            end
-        end
-    end
-end
+-- function checkEndgame()
+--     local endgameFlag = false
+--     for tier = 1, 4 do
+--         for _, upgrade in ipairs(tree_upgrade_tiers[tier]) do
+--             if upgrade.unlockStatus == false and upgrade.name ~= "endgame" then
+--                 endgameFlag = false
+--                 break
+--             end
+--         end
+--     end
 
-function checkEndgame()
-    local endgameFlag = false
-    for tier = 1, 4 do
-        for _, upgrade in ipairs(tree_upgrade_tiers[tier]) do
-            if upgrade.unlockStatus == false and upgrade.name ~= "endgame" then
-                endgameFlag = false
-                break
-            end
-        end
-    end
-
-    if endgameFlag then
-        tree_upgrade_tiers[5][1].unlockStatus = true
-    end
-end
-
-
-function drawLine(node1, node2)
-    love.graphics.line(node1.x2/2, node1.y2/2, node2.x2/2, node2.y2/2)
-end
+--     if endgameFlag then
+--         tree_upgrade_tiers[5][1].unlockStatus = true
+--     end
+-- end
 
 function drawUpgradeTreeScrollBar()
     love.graphics.setColor(0.45,0.45,0.45)
@@ -198,8 +186,7 @@ function love.draw()
     if main_game_screen then
         drawJobApplication()
     elseif upgrade_tree_screen then
-        upgradeTree.renderTree(trimmedWindowWidth)
-        upgradeTree.drawBackground(trimmedWindowWidth, scrollBarOffset)
+        upgradeTree.drawTree(trimmedWindowWidth, scrollBarOffset, windowHeight)
         drawUpgradeTreeScrollBar()
     end
 
@@ -249,10 +236,15 @@ function love.mousepressed( x, y, _, _, _)
 
     if main_game_screen then
         total_money = clickCheck.clickJobCheck(x,y, jobX1, jobY1, jobX2, jobY2, total_money)
+        firstClick = true
     elseif upgrade_tree_screen then
-
+        if firstClick then
+            firstClick = false
+        else
+            total_money = upgradeTree.checkClick(x, y, total_money)
+        end
+        
     end
-    
 end
 
 function love.wheelmoved(_, y)
@@ -268,7 +260,7 @@ function love.wheelmoved(_, y)
                 scrollBarOffset = scrollBarOffsetMax
             end
         end
-        upgradeTree.drawBackground(trimmedWindowWidth, scrollBarOffset)
+        upgradeTree.drawTree(trimmedWindowWidth, scrollBarOffset, windowHeight)
     end
 end
 

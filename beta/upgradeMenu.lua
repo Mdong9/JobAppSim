@@ -2,8 +2,6 @@ local upgrades = {}
 
 local upgradeBox
 
-
-
 local font = love.graphics.getFont()
 ----------------------------------------------------------------------------------------
 ----------------------------Render Upgrades Main Screen---------------------------------
