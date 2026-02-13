@@ -5,7 +5,19 @@
 local upgradeTree = {}
 
 local tree_upgrade_node_height = 50
-local tree_upgrade_node_width = 150
+local tree_upgrade_node_width = 200
+
+local largeBuffer = 35
+local smallBuffer = 25
+local treeBGHeight = 2*largeBuffer + 4*smallBuffer + 3*tree_upgrade_node_height
+
+local scrollBarHeight = 150
+local scrollBarWidth = 20
+
+local virtualWindowHeight = 1080
+local scrollbarPosY = 0
+local menuOffset = 0
+local menuBuffer = virtualWindowHeight * 0.06
 
 local tree_unlock1 = {
     unlock = {name = "Upgrade 1", unlockStatus = true, dependency = "none", price = 1},
@@ -132,6 +144,14 @@ function getUpgrade(requestedUpgrade)
     end
 end
 
+function upgradeTree.getUpgradeUnlockStatus(requestedUpgrade)
+    return getUpgrade(requestedUpgrade).unlockStatus
+end
+
+function upgradeTree.getUpgrade(requestedUpgrade)
+    return getUpgrade(requestedUpgrade)
+end
+
 function printText(tree_tier, upgrade, divX, divY)
         love.graphics.setColor(0,0,0)
         love.graphics.print(tree_tier[upgrade].name, divX, divY)
@@ -192,15 +212,14 @@ end
 
 function drawLine(node1, node2)
     if node1.dependency ~= "none" and node1.dependency ~= "all" then
-        -- if getUpgrade(node2.dependency).unlockStatus then
             local x1 = (node1.x1 + node1.x2) / 2
             local y1 = (node1.y1 + node1.y2) / 2
             local x2 = (node2.x1 + node2.x2) / 2
             local y2 = (node2.y1 + node2.y2) / 2
+
             love.graphics.setColor(0,0,0)
             love.graphics.line(x1, y1, x2, y2)
             love.graphics.setColor(1,1,1)
-        -- end
     end
 end
 
@@ -211,7 +230,7 @@ function drawTreeConnections(tree_tier)
     end
 
     --unlockTierX speed/max/gain
-    if getUpgrade(tree_tier.unlock.dependency).unlockStatus then
+    if getUpgrade(tree_tier.Max1.dependency).unlockStatus then
         drawLine(tree_tier.Speed1, getUpgrade(tree_tier.Speed1.dependency))
         drawLine(tree_tier.Max1, getUpgrade(tree_tier.Max1.dependency))
         drawLine(tree_tier.GainX2, getUpgrade(tree_tier.GainX2.dependency))
@@ -238,13 +257,12 @@ function drawTierBoxes(trimmedWindowWidth, scrollOffset, divY1, divY2, smallBuff
 
     --unlockTierX
     if getUpgrade(tree_tier.unlock.dependency).unlockStatus then
-        drawLine(tree_tier.unlock, getUpgrade(tree_tier.unlock.dependency))
         love.graphics.rectangle("fill", horiz_spacer, tierY, tree_upgrade_node_width, tree_upgrade_node_height)
         printText(tree_tier, "unlock", horiz_spacer, tierY)
     end
 
     --unlockTierX speed/max/gain
-    if getUpgrade(tree_tier.unlock.dependency).unlockStatus then
+    if getUpgrade(tree_tier.Max1.dependency).unlockStatus then
         love.graphics.rectangle("fill", (2*horiz_spacer) + tree_upgrade_node_width, tierY - smallBuffer - tree_upgrade_node_height, tree_upgrade_node_width, tree_upgrade_node_height)
         love.graphics.rectangle("fill", (2*horiz_spacer) + tree_upgrade_node_width, tierY, tree_upgrade_node_width, tree_upgrade_node_height)
         love.graphics.rectangle("fill", (2*horiz_spacer) + tree_upgrade_node_width, tierY + smallBuffer + tree_upgrade_node_height, tree_upgrade_node_width, tree_upgrade_node_height)
@@ -277,10 +295,9 @@ function upgradeTree.checkClick(mouseX, mouseY, total_money)
     for _, tier in pairs(tree) do
         for _, upgrade in pairs(tier) do
             if mouseX >= upgrade.x1 and mouseX <= upgrade.x2 and mouseY >= upgrade.y1 and mouseY <= upgrade.y2 then
-                if not upgrade.unlockStatus and upgrade.price <= total_money then
+                if not upgrade.unlockStatus and upgrade.price <= total_money and getUpgrade(upgrade.dependency).unlockStatus then
                     upgrade.unlockStatus = true
                     total_money = total_money - upgrade.price
-                    print(upgrade.name)
                 end
             end
         end
@@ -288,35 +305,65 @@ function upgradeTree.checkClick(mouseX, mouseY, total_money)
     return total_money
 end
 
-function upgradeTree.drawTree(trimmedWindowWidth, scrollOffset, windowHeight)
+function upgradeTree.drawTree(trimmedWindowWidth, windowHeight)
     local flipflop = true
-    local largeBuffer = 35
-    local smallBuffer = 25
+
     local offset = 0
-    local treeBGY = windowHeight*0.06
-    local treeBGHeight = 2*largeBuffer + 4*smallBuffer + 3*tree_upgrade_node_height
+    -- local treeBGY = windowHeight*0.06
     
-    for tier = 1, 8 do
+    for tier = 1, 7 do
         if flipflop then
             love.graphics.setColor(0.4,0.4,0.5)
-            love.graphics.rectangle("fill", 0, treeBGY + offset - scrollOffset, trimmedWindowWidth, treeBGHeight)
+            love.graphics.rectangle("fill", 0, menuBuffer + offset - menuOffset, trimmedWindowWidth, treeBGHeight)
             love.graphics.setColor(1,1,1)
         else
             love.graphics.setColor(0.5,0.6,0.6)
-            love.graphics.rectangle("fill", 0, treeBGY + offset - scrollOffset, trimmedWindowWidth, treeBGHeight)
+            love.graphics.rectangle("fill", 0, menuBuffer + offset - menuOffset, trimmedWindowWidth, treeBGHeight)
             love.graphics.setColor(1,1,1)
         end
 
+    
         if tier < 8 then
             local temp_tier = "tree_unlock" .. tostring(tier)
-            updateTreeCoords(trimmedWindowWidth, scrollOffset, treeBGY + offset, treeBGY + treeBGHeight + offset, smallBuffer, tree[temp_tier])
+            updateTreeCoords(trimmedWindowWidth, menuOffset, menuBuffer + offset, menuBuffer + treeBGHeight + offset, smallBuffer, tree[temp_tier])
             drawTreeConnections(tree[temp_tier])
-            drawTierBoxes(trimmedWindowWidth, scrollOffset, treeBGY + offset, treeBGY + treeBGHeight + offset, smallBuffer, tree[temp_tier])
         end
 
         flipflop = not flipflop
         offset = offset + treeBGHeight
     end
+
+    offset = 0
+    for tier = 1, 7 do
+        
+        if tier < 8 then
+            local temp_tier = "tree_unlock" .. tostring(tier)
+            drawTierBoxes(trimmedWindowWidth, menuOffset, menuBuffer + offset, menuBuffer + treeBGHeight + offset, smallBuffer, tree[temp_tier])
+        end
+        offset = offset + treeBGHeight
+    end
+
+end
+
+function upgradeTree.drawScrollBar(trimmedWindowWidth)
+    -- print("asdlkfjajkdsf;lakdsf")
+    local scrollBarX = trimmedWindowWidth - 20
+
+    love.graphics.setColor(0.45,0.45,0.45)
+    love.graphics.rectangle("fill", scrollBarX, menuBuffer + scrollbarPosY, scrollBarWidth, scrollBarHeight)
+    love.graphics.setColor(1,1,1)
+end
+
+function upgradeTree.updateScroll(y)
+    local maxMenuScroll = (treeBGHeight * 7) - virtualWindowHeight + menuBuffer
+    local maxScrollbarScrollHeight = (virtualWindowHeight * 0.94) - scrollBarHeight
+
+    scrollbarPosY = math.min(math.max(scrollbarPosY - y*30, 0), maxScrollbarScrollHeight)
+    
+    local scrollPercent = scrollbarPosY / maxScrollbarScrollHeight
+    menuOffset = scrollPercent * maxMenuScroll
+
+
 end
 
 

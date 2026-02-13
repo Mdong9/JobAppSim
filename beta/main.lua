@@ -59,8 +59,6 @@ local exitX2
 local exitY1
 local exitY2
 
-local scroll = 0
-
 local exit = require("exit")
 local upgrades = require("upgradeMenu")
 local upgradeTree = require("upgradeTree")
@@ -73,81 +71,66 @@ local jobY1
 local jobX2
 local jobY2
 
-local tabOffset
-
 local firstClick = true--used for making sure that tree upgrade click check doesnt check upgrades on click on for the tab
+
+local jobImage
+local jobWidth
+local jobHeight
+
+local jobScaleX = 0.55
+local jobScaleY = 0.55
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Buttons Initialization------------------------------
 ----------------------------------------------------------------------------------------
 local upgradeBoxHeight = 50
 local upgradeBoxWidth = 150
 
-local windowWidth = 1280
-local windowHeight = 720
+local virtualWindowWidth = 1920
+local virtualWindowHeight = 1080
+
+local scaleX
+local scaleY
+local scale = 1
+
+local offsetX = 0
+local offsetY = 0
 
 local bgX
 local bgWidth
+
+local windowHeight = virtualWindowHeight
 ----------------------------------------------------------------------------------------
 ----------------------------Upgrade Tree Initial Values---------------------------------
 ----------------------------------------------------------------------------------------
 local trimmedWindowWidth
 
-local scrollBarOffset = 0
-local scrollBarX
-local scrollBarHeight = 150
-local scrollBarWidth = 20
-local scrollBarOffsetMin = 0
-local scrollBarOffsetMax = windowHeight - scrollBarHeight - windowHeight*0.06
-
--- function checkEndgame()
---     local endgameFlag = false
---     for tier = 1, 4 do
---         for _, upgrade in ipairs(tree_upgrade_tiers[tier]) do
---             if upgrade.unlockStatus == false and upgrade.name ~= "endgame" then
---                 endgameFlag = false
---                 break
---             end
---         end
---     end
-
---     if endgameFlag then
---         tree_upgrade_tiers[5][1].unlockStatus = true
---     end
--- end
-
-function drawUpgradeTreeScrollBar()
-    love.graphics.setColor(0.45,0.45,0.45)
-    love.graphics.rectangle("fill", scrollBarX, windowHeight*0.06 + scrollBarOffset, scrollBarWidth, scrollBarHeight)
-    love.graphics.setColor(1,1,1)
-end
-----------------------------------------------------------------------------------------
---------------------------------Main Clicker visual-------------------------------------
-----------------------------------------------------------------------------------------
-function drawJobApplication()
-    rectangle_height = (windowHeight*0.8) --height_pixel
-    rectangle_width = (windowWidth*0.6) -- width
-    love.graphics.rectangle("fill", (windowWidth*0.8)/2 - rectangle_width/2, windowHeight/2 - rectangle_height/2, rectangle_width, rectangle_height)
-end
 ----------------------------------------------------------------------------------------
 ----------------------------Main application functions----------------------------------
 ----------------------------------------------------------------------------------------
 function love.load()
-    upgrades.initializeUpgradeValues(upgradeBoxWidth, upgradeBoxHeight)
-    upgrade_info = upgrades.info
+    -- upgrades.initializeUpgradeValues(upgradeBoxWidth, upgradeBoxHeight)
+    -- upgrade_info = upgrades.info
+    upgrade_info = upgrades.initializeUpgradeValues(upgradeBoxWidth, upgradeBoxHeight)
     
-    love.window.setMode(1280, 720, {
+    love.window.setMode(1920, 1080, {
         fullscreen = false,
-        resizable = true,
-        minwidth = 800,    -- minimum width
-        minheight = 600    -- minimum height
+        resizable = false,
         }
     ) --should work
     
-    trimmedWindowWidth = windowWidth*0.8
-    scrollBarX = trimmedWindowWidth - 20
-    bgX = windowWidth*0.8
-    bgWidth = windowWidth - bgX
+    trimmedWindowWidth = virtualWindowWidth*0.8
+    -- scrollBarX = trimmedWindowWidth - 20
+    bgX = virtualWindowWidth*0.8
+    bgWidth = virtualWindowWidth - bgX
 
+    jobImage = love.graphics.newImage("assets/Job-Application_blank_page-0001.jpg")
+    jobWidth = (jobImage:getWidth()) *jobScaleX
+    jobHeight = (jobImage:getHeight()) *jobScaleY
+
+    jobX1 = (trimmedWindowWidth - jobWidth) / 2
+    jobY1 = (virtualWindowHeight - jobHeight) / 2
+    jobX2 = jobX1 + jobWidth
+    jobY2 = jobY1 + jobHeight
 
     -- Set the default filter to "nearest" for pixel-perfect scaling
     love.graphics.setDefaultFilter("nearest", "nearest") 
@@ -161,6 +144,8 @@ end
 
 
 function love.update(dt)
+    upgrade_info = upgrades.updateMultiplier()
+    upgrade_info = upgrades.updateMax()
     dtotal = dtotal + dt
 
     if dtotal > 1 then
@@ -168,26 +153,30 @@ function love.update(dt)
         dtotal = dtotal - 1
 
         for _, upgrade in ipairs(upgrade_info) do
-           total_money = total_money + (upgrade.rate * upgrade.boughtQuantity)
+           total_money = total_money + (upgrade.rate * upgrade.boughtQuantity * upgrade.multiplier)
         end
     end
 end
 
 
 function love.draw()
-    upgrades.drawUpgradeMenu(bgX, bgWidth, windowWidth, windowHeight, upgradeBoxHeight, upgradeBoxWidth)
+    love.graphics.push()
+    -- love.graphics.translate(offsetX / scale, offsetY / scale)
+    -- love.graphics.scale(scale, scale)
 
-    exit.drawExit(bgX, bgWidth, windowHeight, upgradeBoxHeight)
+    upgrades.drawUpgradeMenu(bgX, bgWidth, virtualWindowWidth, virtualWindowHeight, upgradeBoxHeight, upgradeBoxWidth)
+
+    exit.drawExit(bgX, bgWidth, virtualWindowHeight, upgradeBoxHeight)
     exitX1 = exit.coords.exitX1
     exitY1 = exit.coords.exitY1
     exitX2 = exit.coords.exitX2
     exitY2 = exit.coords.exitY2
 
     if main_game_screen then
-        drawJobApplication()
+        love.graphics.draw(jobImage, jobX1, jobY1, 0, jobScaleX, jobScaleY)
     elseif upgrade_tree_screen then
-        upgradeTree.drawTree(trimmedWindowWidth, scrollBarOffset, windowHeight)
-        drawUpgradeTreeScrollBar()
+        upgradeTree.drawTree(trimmedWindowWidth, virtualWindowHeight)
+        upgradeTree.drawScrollBar(trimmedWindowWidth)
     end
 
     -- Counter for total_money
@@ -195,31 +184,31 @@ function love.draw()
     local moneyTextHeight = font:getHeight()
     local moneyTextWidth = font:getWidth("Job Applications: " .. tostring(total_money))
 
-    local moneyY = windowHeight*0.03 - moneyTextHeight/2
-    local moneyX = windowWidth*0.8 - moneyTextWidth
+    local moneyY = virtualWindowHeight*0.03 - moneyTextHeight/2
+    local moneyX = virtualWindowWidth*0.8 - moneyTextWidth
     love.graphics.print("Job Applications: " .. total_money, moneyX, moneyY)
     love.graphics.setColor(1,1,1)
     
-
-
-    --fix variable reference 
-    jobX1 = (windowWidth*0.8)/2 - rectangle_width/2
-    jobY1 = windowHeight/2 - rectangle_height/2
-    jobX2 = (windowWidth*0.8)/2 + rectangle_width/2
-    jobY2 = windowHeight/2 + rectangle_height/2
+    love.graphics.pop()
 end
 
 
 function love.resize(w, h)
-    windowHeight = h
-    windowWidth = w
+    -- realWindowHeight = h
+    -- realWindowWidth = w
 
-    trimmedWindowWidth = windowWidth * 0.8
-    scrollBarX = trimmedWindowWidth - 20
-    scrollBarOffsetMax = windowHeight - scrollBarHeight - windowHeight*0.06
+    scaleX = w / virtualWindowWidth
+    scaleY = h / virtualWindowHeight
+    scale = math.min(scaleX, scaleY)
 
-    bgX = windowWidth*0.8
-    bgWidth = windowWidth - bgX
+    offsetX = (w - virtualWindowWidth  * scale) / 2
+    offsetY = (h - virtualWindowHeight * scale) / 2
+    -- trimmedWindowWidth = windowWidth * 0.8
+    -- scrollBarX = trimmedWindowWidth - 20
+    -- scrollBarOffsetMax = windowHeight - scrollBarHeight - windowHeight*0.06
+
+    -- bgX = windowWidth*0.8
+    -- bgWidth = windowWidth - bgX
 end
 
 
@@ -248,26 +237,15 @@ function love.mousepressed( x, y, _, _, _)
 end
 
 function love.wheelmoved(_, y)
-    
     if upgrade_tree_screen then
-        scrollBarOffset = scrollBarOffset - y*30
-        if y > 0 then
-            if scrollBarOffset < scrollBarOffsetMin then
-                scrollBarOffset = 0
-            end
-        elseif y < 0 then
-            if scrollBarOffset > scrollBarOffsetMax then
-                scrollBarOffset = scrollBarOffsetMax
-            end
-        end
-        upgradeTree.drawTree(trimmedWindowWidth, scrollBarOffset, windowHeight)
+        upgradeTree.updateScroll(y)
     end
 end
 
 --Things to fix or implement next
---scroll and spacer for upgrades
 --resizeing aspect ratio preserved (Hard)
 --reformat job application and upgrade shop
 --add exit graphic
 --add job application png
 --separate functions out
+

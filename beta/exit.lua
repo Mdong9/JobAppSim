@@ -21,6 +21,8 @@ function exit.drawExit(bgX, bgWidth, windowHeight, upgradeBoxHeight)
         exitY1 = windowHeight - 75,
         exitY2 = windowHeight - 75 + upgradeBoxHeight
     }
+    
+    love.graphics.print("EXIT")
 end
 
 
